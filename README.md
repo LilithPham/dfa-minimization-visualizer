@@ -46,7 +46,6 @@ This project is an interactive web application designed to visualize and simulat
 
 * **.gitignore**: Git configuration to ignore virtual environments and cache files.
 
-Developed for the CS Midterm Project - 2026
 
 ### Local Execution
 1. Clone this repository:
@@ -56,7 +55,7 @@ Developed for the CS Midterm Project - 2026
 
 2. Create and activate a virtual environment:
    ```bash
-   python -m venv venv
+   python -m venv venv 
    .\venv\Scripts\activate
 
 3. Install required Python packages:
