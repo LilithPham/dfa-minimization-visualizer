@@ -1,16 +1,19 @@
+"""
+Automata Theory & Formal Languages - Midterm Project
+Core Logic: DFA Minimization (Table-Filling Algorithm)
+"""
+
 class DFAMinimizer:
     def __init__(self, states, alphabet, transitions, start_state, final_states):
-        self.states = states          # list: ['q0', 'q1', 'q2',...]
-        self.alphabet = alphabet      # list: ['0', '1']
-        self.transitions = transitions # dict: {('q0', '0'): 'q1', ...}
-        self.start_state = start_state # string: 'q0'
-        self.final_states = final_states # list: ['q1', 'q3']
-        
-        # Mảng này cực kỳ quan trọng để làm UI tương tác
+        self.states = states
+        self.alphabet = alphabet
+        self.transitions = transitions
+        self.start_state = start_state
+        self.final_states = final_states
         self.history = [] 
 
     def get_reachable_states(self):
-        """Bước 1: BFS để tìm các state có thể chạm tới từ start_state"""
+        """Phase 1: Remove inaccessible states using Breadth-First Search (BFS)"""
         reachable = {self.start_state}
         queue = [self.start_state]
         
@@ -24,38 +27,35 @@ class DFAMinimizer:
                     
         inaccessible = set(self.states) - reachable
         self.history.append({
-            "step_name": "Bước 1: Xóa các node cô lập (Inaccessible States)",
-            "description": f"Tìm thấy các node có thể đi tới: {reachable}. Xóa các node: {inaccessible if inaccessible else 'Không có'}",
+            "step_name": "Phase 1: State Reachability Analysis",
+            "description": f"Identified reachable states: {reachable}. Removed inaccessible states: {inaccessible if inaccessible else 'None'}.",
             "reachable": list(reachable)
         })
         return list(reachable)
 
     def initialize_table(self, reachable_states):
-        """Bước 2: Tạo bảng tam giác và đánh dấu Base Case (Đích - Không Đích)"""
-        # Tạo danh sách các cặp (p, q) duy nhất
+        """Phase 2: Generate state pairs and mark base cases (Distinguishable by λ)"""
         pairs = []
         for i in range(len(reachable_states)):
             for j in range(i + 1, len(reachable_states)):
                 pairs.append((reachable_states[i], reachable_states[j]))
         
         marked = set()
-        # Đánh dấu những cặp có 1 đứa là Final, 1 đứa không phải Final
         for p, q in pairs:
-            p_in_F = p in self.final_states
-            q_in_F = q in self.final_states
-            if p_in_F != q_in_F:  # Phép XOR: một True một False
+            # A pair is distinguishable if one is a final state and the other is not
+            if (p in self.final_states) != (q in self.final_states):
                 marked.add((p, q))
-                marked.add((q, p)) # Đánh dấu cả 2 chiều cho dễ tra cứu
+                marked.add((q, p))
                 
         self.history.append({
-            "step_name": "Bước 2: Đánh dấu Base Case",
-            "description": "Đánh dấu (X) các cặp chứa 1 node là Đích và 1 node Không Phải Đích.",
+            "step_name": "Phase 2: Base Case Marking",
+            "description": "Marked pairs where exactly one state is a Final State (F).",
             "marked_pairs": list(marked)
         })
         return pairs, marked
 
     def mark_procedure(self, pairs, marked):
-        """Bước 3: Vòng lặp dò mìn (Thuật toán chính)"""
+        """Phase 3: Iterative Table-Filling (Marking) Algorithm"""
         changed = True
         iteration = 1
         
@@ -63,7 +63,6 @@ class DFAMinimizer:
             changed = False
             for p, q in pairs:
                 if (p, q) not in marked:
-                    # Kiểm tra xem tương lai của tụi nó có dẫn vào ô đã bị (X) không
                     for a in self.alphabet:
                         p_next = self.transitions.get((p, a))
                         q_next = self.transitions.get((q, a))
@@ -74,27 +73,65 @@ class DFAMinimizer:
                             changed = True
                             
                             self.history.append({
-                                "step_name": f"Bước 3 (Vòng {iteration}): Dò mìn",
-                                "description": f"Đánh dấu cặp ({p}, {q}) vì khi đọc chữ '{a}', chúng đi tới cặp ({p_next}, {q_next}) đã bị đánh dấu.",
+                                "step_name": f"Phase 3 (Iteration {iteration}): Marking Process",
+                                "description": f"Marked ({p}, {q}) because input '{a}' leads to a previously marked pair ({p_next}, {q_next}).",
                                 "marked_pairs": list(marked)
                             })
-                            break # Chuyển sang cặp tiếp theo
+                            break
             iteration += 1
             
         return marked
 
     def run(self):
-        """Hàm tổng kích hoạt toàn bộ luồng chạy"""
-        self.history = [] # Reset lịch sử
+        """Execute complete minimization and construct the final Reduced DFA"""
+        self.history = [] 
         reachable = self.get_reachable_states()
         pairs, marked = self.initialize_table(reachable)
         final_marked = self.mark_procedure(pairs, marked)
         
-        # Những cặp không bị đánh dấu chính là Equivalent States
+        # Phase 4: Construct Equivalence Classes
+        equiv_classes = []
+        for state in reachable:
+            placed = False
+            for eq_class in equiv_classes:
+                rep = list(eq_class)[0]
+                # If a pair is not marked, the states are indistinguishable
+                if (state, rep) not in final_marked:
+                    eq_class.add(state)
+                    placed = True
+                    break
+            if not placed:
+                equiv_classes.append({state})
+                
+        # Generate new state names and mapping
+        state_map = {}
+        for eq_class in equiv_classes:
+            new_name = "_".join(sorted(list(eq_class)))
+            for s in eq_class:
+                state_map[s] = new_name
+                
+        # Reconstruct Reduced DFA Components
+        reduced_states = list(set(state_map.values()))
+        reduced_start = state_map[self.start_state]
+        reduced_finals = list(set([state_map[f] for f in self.final_states if f in state_map]))
+        
+        reduced_transitions = {}
+        for (src, symbol), dst in self.transitions.items():
+            if src in state_map and dst in state_map:
+                reduced_transitions[(state_map[src], symbol)] = state_map[dst]
+
+        # Extract indistinguishable pairs for UI display
         equivalent_pairs = [ (p,q) for p,q in pairs if (p,q) not in final_marked ]
+        
         self.history.append({
-            "step_name": "Bước 4: Chốt hạ (Reduce)",
-            "description": f"Thuật toán kết thúc. Các cặp node giống nhau để gộp là: {equivalent_pairs if equivalent_pairs else 'Không có'}",
-            "equivalent_pairs": equivalent_pairs
+            "step_name": "Phase 4: Reduced DFA Construction",
+            "description": "The minimization process is complete. Equivalent states have been merged into combined nodes.",
+            "equivalent_pairs": equivalent_pairs,
+            "reduced_dfa": {
+                "states": reduced_states,
+                "transitions": reduced_transitions,
+                "start_state": reduced_start,
+                "final_states": reduced_finals
+            }
         })
         return self.history
