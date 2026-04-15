@@ -43,13 +43,25 @@ This project is an interactive web application designed to visualize and simulat
    git clone [https://github.com/LilithPham/dfa-minimization-visualizer.git](https://github.com/LilithPham/dfa-minimization-visualizer.git)
    cd dfa-minimization-visualizer
 2. Create and activate a virtual environment:
-   python -m venv venv
-   # On Windows:
-   .\venv\Scripts\activate
-   # On Mac/Linux:
-   source venv/bin/activate
-3.Install required Python packages:
-   pip install streamlit graphviz pandas numpy
+   ```bash
+python -m venv venv
+ //On Windows:
+.\venv\Scripts\activate
+ //On Mac/Linux:
+source venv/bin/activate
+3. Install required Python packages:
+    ```bash
+pip install streamlit graphviz pandas numpy
 4.Launch the application:
-   streamlit run app.py
-### Project Structure
+    ```bash
+streamlit run app.py
+### 📁 Project Structure
+app.py: The main Streamlit frontend application handling UI, state management, and graph rendering.
+
+dfa_logic.py: The backend logic containing the DFAMinimizer class that executes the discrete mathematics algorithms.
+
+README.md: Project documentation.
+
+.gitignore: Git configuration to ignore virtual environments and cache files.
+
+Developed for the CS Midterm Project - 2026
