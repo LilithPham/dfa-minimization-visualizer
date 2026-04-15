@@ -47,10 +47,10 @@ This project is an interactive web application designed to visualize and simulat
    python -m venv venv
   .\venv\Scripts\activate
 3. Install required Python packages:
-    ```bash
+   ```bash
   pip install streamlit graphviz pandas numpy
 4.Launch the application:
-    ```bash
+   ```bash
   streamlit run app.py
 ### 📁 Project Structure
 * **app.py**: The main Streamlit frontend application handling UI, state management, and graph rendering.
