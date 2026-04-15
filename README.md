@@ -53,13 +53,16 @@ Developed for the CS Midterm Project - 2026
    ```bash
    git clone [https://github.com/LilithPham/dfa-minimization-visualizer.git](https://github.com/LilithPham/dfa-minimization-visualizer.git)
    cd dfa-minimization-visualizer
+
 2. Create and activate a virtual environment:
    ```bash
    python -m venv venv
    .\venv\Scripts\activate
+
 3. Install required Python packages:
    ```bash
-  pip install streamlit graphviz pandas numpy
+   pip install streamlit graphviz pandas numpy
+
 4.Launch the application:
    ```bash
   streamlit run app.py
