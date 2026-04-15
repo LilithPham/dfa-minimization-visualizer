@@ -37,22 +37,7 @@ This project is an interactive web application designed to visualize and simulat
    * **macOS:** `brew install graphviz`
    * **Linux:** `sudo apt-get install graphviz`
 
-### Local Execution
-1. Clone this repository:
-   ```bash
-   git clone [https://github.com/LilithPham/dfa-minimization-visualizer.git](https://github.com/LilithPham/dfa-minimization-visualizer.git)
-   cd dfa-minimization-visualizer
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-  .\venv\Scripts\activate
-3. Install required Python packages:
-   ```bash
-  pip install streamlit graphviz pandas numpy
-4.Launch the application:
-   ```bash
-  streamlit run app.py
-### 📁 Project Structure
+## 📁 Project Structure
 * **app.py**: The main Streamlit frontend application handling UI, state management, and graph rendering.
 
 * **dfa_logic.py**: The backend logic containing the DFAMinimizer class that executes the discrete mathematics algorithms.
@@ -62,3 +47,20 @@ This project is an interactive web application designed to visualize and simulat
 * **.gitignore**: Git configuration to ignore virtual environments and cache files.
 
 Developed for the CS Midterm Project - 2026
+
+### Local Execution
+1. Clone this repository:
+   ```bash
+   git clone [https://github.com/LilithPham/dfa-minimization-visualizer.git](https://github.com/LilithPham/dfa-minimization-visualizer.git)
+   cd dfa-minimization-visualizer
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   .\venv\Scripts\activate
+3. Install required Python packages:
+   ```bash
+  pip install streamlit graphviz pandas numpy
+4.Launch the application:
+   ```bash
+  streamlit run app.py
+
