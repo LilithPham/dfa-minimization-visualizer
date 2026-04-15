@@ -45,10 +45,7 @@ This project is an interactive web application designed to visualize and simulat
 2. Create and activate a virtual environment:
    ```bash
    python -m venv venv
-   //On Windows:
   .\venv\Scripts\activate
-  //On Mac/Linux:
-  source venv/bin/activate
 3. Install required Python packages:
     ```bash
   pip install streamlit graphviz pandas numpy
