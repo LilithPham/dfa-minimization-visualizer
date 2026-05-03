@@ -3,8 +3,7 @@ import graphviz
 import pandas as pd
 import numpy as np
 import random
-from dfa_logic import DFAMinimizer
-
+from dfa_logic import DFAMinimizer, NFAToDFAConverter
 # -----------------------------------------------------------------------------
 # GLOBAL CONFIGURATION & SESSION PERSISTENCE
 # -----------------------------------------------------------------------------
@@ -34,7 +33,20 @@ def parse_transitions(raw_text):
             except ValueError:
                 continue
     return transitions
-
+def parse_nfa_transitions(raw_text):
+    """Parses NFA transitions where one symbol can lead to multiple states."""
+    transitions = {}
+    for line in raw_text.strip().split('\n'):
+        if ':' in line:
+            try:
+                header, dsts = line.split(':')
+                src, sym = header.split(',')
+                key = (src.strip(), sym.strip())
+                if key not in transitions: transitions[key] = []
+                # Tách nhiều đích đến bằng dấu phẩy
+                transitions[key].extend([d.strip() for d in dsts.split(',')])
+            except ValueError: continue
+    return transitions
 def render_graph(states, transitions, start, finals, active_node=None):
     """Generates a DOT graph representation of the DFA."""
     dot = graphviz.Digraph()
@@ -100,8 +112,7 @@ st.markdown("""
 # SIDEBAR NAVIGATION
 # -----------------------------------------------------------------------------
 st.sidebar.title("VGU Automata Lab")
-module = st.sidebar.radio("Navigation Menu:", ["DFA Minimizer", "DFA String Simulator"])
-st.sidebar.markdown("---")
+module = st.sidebar.radio("Navigation Menu:", ["DFA Minimizer", "DFA String Simulator", "NFA to DFA Converter"])st.sidebar.markdown("---")
 st.sidebar.caption("© 2026 CS Midterm Project")
 
 # -----------------------------------------------------------------------------
@@ -309,3 +320,81 @@ elif module == "DFA String Simulator":
                 st.markdown("---")
                 st.write("📜 **Recent Test History**")
                 st.dataframe(pd.DataFrame(st.session_state.sim_history).head(5), use_container_width=True)
+# -----------------------------------------------------------------------------
+# MODULE 3: NFA TO DFA CONVERTER
+# -----------------------------------------------------------------------------
+elif module == "NFA to DFA Converter":
+    st.header("NFA to DFA (Subset Construction)")
+    
+    # Khởi tạo Session State cho Module 3 nếu chưa có
+    if 'nfa_history' not in st.session_state: st.session_state.nfa_history = []
+    if 'nfa_step' not in st.session_state: st.session_state.nfa_step = 0
+    if 'original_nfa' not in st.session_state: st.session_state.original_nfa = None
+
+    left_col, right_col = st.columns([1, 2])
+    
+    with left_col:
+        st.subheader("1. Input NFA")
+        st.info("💡 Tip: Dùng chữ 'e' cho bước nhảy Epsilon (ε). Tách nhiều đích đến bằng dấu phẩy (vd: q0,0:q0,q1).")
+        
+        # Dữ liệu mẫu: NFA nhận chuỗi kết thúc bằng '01'
+        q_in = st.text_input("States Q:", "q0, q1, q2")
+        sigma_in = st.text_input("Alphabet Σ (include 'e'):", "0, 1")
+        q0_in = st.text_input("Start State q0:", "q0")
+        f_in = st.text_input("Final States F:", "q2")
+        delta_in = st.text_area("Transitions (src,sym:dst1,dst2):", 
+"q0,0:q0,q1\nq0,1:q0\nq1,1:q2", height=180)
+        
+        if st.button("🚀 Convert to DFA", type="primary", use_container_width=True):
+            states = [s.strip() for s in q_in.split(",")]
+            alphabet = [a.strip() for a in sigma_in.split(",")]
+            start = q0_in.strip()
+            finals = [i.strip() for i in f_in.split(",")]
+            delta = parse_nfa_transitions(delta_in)
+            
+            st.session_state.original_nfa = {
+                "q": states, "sigma": alphabet, "delta": delta, "q0": start, "f": finals
+            }
+            
+            converter = NFAToDFAConverter(states, alphabet, delta, start, finals)
+            st.session_state.nfa_history = converter.run()
+            st.session_state.nfa_step = 0
+            st.rerun()
+
+    with right_col:
+        st.subheader("2. Step-by-Step Subset Construction")
+        if not st.session_state.nfa_history:
+            st.warning("Please configure the NFA on the left and click 'Convert to DFA'.")
+        else:
+            history = st.session_state.nfa_history
+            idx = st.session_state.nfa_step
+            current_step = history[idx]
+            
+            # Điều hướng các bước
+            btn1, btn2, progress_col = st.columns([1,1,2])
+            with btn1:
+                if st.button("⬅️ Previous Step", use_container_width=True) and idx > 0:
+                    st.session_state.nfa_step -= 1; st.rerun()
+            with btn2:
+                if st.button("Next Step ➡️", use_container_width=True) and idx < len(history)-1:
+                    st.session_state.nfa_step += 1; st.rerun()
+            with progress_col:
+                st.progress((idx + 1) / len(history), f"Phase {idx+1} of {len(history)}")
+
+            st.markdown("---")
+            st.subheader(current_step['step_name'])
+            st.success(current_step['description'])
+
+            # Render kết quả DFA ở bước cuối cùng
+            if 'converted_dfa' in current_step:
+                dfa = current_step['converted_dfa']
+                
+                c1, c2 = st.columns([1, 1])
+                with c1:
+                    st.write("**Converted DFA Transition Table:**")
+                    st.table(render_transition_table(dfa['q'], dfa['sigma'], dfa['delta'], dfa['f']))
+                with c2:
+                    st.write("**Converted DFA Graph:**")
+                    fig_dfa = render_graph(dfa['q'], dfa['delta'], dfa['q0'], dfa['f'])
+                    st.graphviz_chart(fig_dfa)
+                    st.download_button("📥 Download Result DFA", data=graphviz.Source(fig_dfa.source).pipe(format='png'), file_name="subset_dfa.png", mime="image/png")

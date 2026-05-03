@@ -1,8 +1,3 @@
-"""
-Automata Theory & Formal Languages - Midterm Project
-Core Logic: DFA Minimization (Table-Filling Algorithm)
-"""
-
 class DFAMinimizer:
     def __init__(self, states, alphabet, transitions, start_state, final_states):
         self.states = states
@@ -135,3 +130,90 @@ class DFAMinimizer:
             }
         })
         return self.history
+class NFAToDFAConverter:
+    def __init__(self, states, alphabet, transitions, start_state, final_states):
+        self.states = states
+        self.alphabet = [a for a in alphabet if a != 'e'] # Bỏ epsilon khỏi bảng chữ cái DFA
+        self.transitions = transitions # Dictionary dạng: (src, sym): [dst1, dst2]
+        self.start_state = start_state
+        self.final_states = final_states
+
+    def epsilon_closure(self, state_set):
+        """Tìm tất cả các state có thể tới được bằng nhánh Epsilon (e)"""
+        closure = set(state_set)
+        stack = list(state_set)
+        while stack:
+            s = stack.pop()
+            if (s, 'e') in self.transitions:
+                for dest in self.transitions[(s, 'e')]:
+                    if dest not in closure:
+                        closure.add(dest)
+                        stack.append(dest)
+        return frozenset(closure)
+
+    def move(self, state_set, symbol):
+        """Tìm các state có thể tới được khi đọc 1 symbol"""
+        result = set()
+        for s in state_set:
+            if (s, symbol) in self.transitions:
+                result.update(self.transitions[(s, symbol)])
+        return frozenset(result)
+
+    def run(self):
+        history = []
+        # Bước 1: Tìm Trạng thái bắt đầu của DFA = Epsilon Closure của q0 NFA
+        dfa_start = self.epsilon_closure([self.start_state])
+        unmarked_states = [dfa_start]
+        dfa_states = [dfa_start]
+        dfa_transitions = {}
+
+        history.append({
+            "step_name": "Phase 1: Initialization",
+            "description": f"Compute ε-closure of Start State '{self.start_state}' -> Initial DFA State: {set(dfa_start)}"
+        })
+
+        # Bước 2: Vòng lặp Subset Construction
+        step_count = 2
+        while unmarked_states:
+            current_subset = unmarked_states.pop(0)
+
+            for symbol in self.alphabet:
+                # Công thức: Epsilon_Closure(Move(Current, Symbol))
+                move_res = self.move(current_subset, symbol)
+                target_subset = self.epsilon_closure(move_res)
+
+                if not target_subset:
+                    continue # Nếu rỗng thì bỏ qua (hoặc hiểu là rơi vào TRAP)
+
+                if target_subset not in dfa_states:
+                    dfa_states.append(target_subset)
+                    unmarked_states.append(target_subset)
+
+                dfa_transitions[(current_subset, symbol)] = target_subset
+                
+                history.append({
+                    "step_name": f"Phase {step_count}: Process Symbol '{symbol}'",
+                    "description": f"From {set(current_subset)} read '{symbol}' -> Move to {set(move_res)} -> ε-closure -> New State {set(target_subset)}"
+                })
+                step_count += 1
+
+        # Bước 3: Định dạng lại output cho dễ vẽ đồ thị
+        def format_name(s_set):
+            return "{" + ", ".join(sorted(list(s_set))) + "}"
+
+        final_q = [format_name(s) for s in dfa_states]
+        final_start = format_name(dfa_start)
+        final_f = [format_name(s) for s in dfa_states if any(fs in s for fs in self.final_states)]
+        
+        final_delta = {}
+        for (src, sym), dst in dfa_transitions.items():
+            final_delta[(format_name(src), sym)] = format_name(dst)
+
+        history.append({
+            "step_name": "Final Phase: Equivalent DFA Generated",
+            "description": "All subsets evaluated. Final states are those containing any of the original NFA final states.",
+            "converted_dfa": {
+                "q": final_q, "sigma": self.alphabet, "q0": final_start, "f": final_f, "delta": final_delta
+            }
+        })
+        return history
