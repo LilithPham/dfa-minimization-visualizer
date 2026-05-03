@@ -112,7 +112,8 @@ st.markdown("""
 # SIDEBAR NAVIGATION
 # -----------------------------------------------------------------------------
 st.sidebar.title("VGU Automata Lab")
-module = st.sidebar.radio("Navigation Menu:", ["DFA Minimizer", "DFA String Simulator", "NFA to DFA Converter"])st.sidebar.markdown("---")
+module = st.sidebar.radio("Navigation Menu:", ["DFA Minimizer", "DFA String Simulator", "NFA to DFA Converter"])
+st.sidebar.markdown("---")
 st.sidebar.caption("© 2026 CS Midterm Project")
 
 # -----------------------------------------------------------------------------
