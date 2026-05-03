@@ -133,19 +133,19 @@ class DFAMinimizer:
 class NFAToDFAConverter:
     def __init__(self, states, alphabet, transitions, start_state, final_states):
         self.states = states
-        self.alphabet = [a for a in alphabet if a != 'e'] # Bỏ epsilon khỏi bảng chữ cái DFA
-        self.transitions = transitions # Dictionary dạng: (src, sym): [dst1, dst2]
+        self.alphabet = [a for a in alphabet if a != 'λ'] 
+        self.transitions = transitions 
         self.start_state = start_state
         self.final_states = final_states
 
     def epsilon_closure(self, state_set):
-        """Tìm tất cả các state có thể tới được bằng nhánh Epsilon (e)"""
+        """Tìm tất cả các state có thể tới được bằng nhánh Lambda (λ)"""
         closure = set(state_set)
         stack = list(state_set)
         while stack:
             s = stack.pop()
-            if (s, 'e') in self.transitions:
-                for dest in self.transitions[(s, 'e')]:
+            if (s, 'λ') in self.transitions:
+                for dest in self.transitions[(s, 'λ')]:
                     if dest not in closure:
                         closure.add(dest)
                         stack.append(dest)
@@ -161,7 +161,6 @@ class NFAToDFAConverter:
 
     def run(self):
         history = []
-        # Bước 1: Tìm Trạng thái bắt đầu của DFA = Epsilon Closure của q0 NFA
         dfa_start = self.epsilon_closure([self.start_state])
         unmarked_states = [dfa_start]
         dfa_states = [dfa_start]
@@ -169,21 +168,19 @@ class NFAToDFAConverter:
 
         history.append({
             "step_name": "Phase 1: Initialization",
-            "description": f"Compute ε-closure of Start State '{self.start_state}' -> Initial DFA State: {set(dfa_start)}"
+            "description": f"Compute λ-closure of Start State '{self.start_state}' -> Initial DFA State: {set(dfa_start)}"
         })
 
-        # Bước 2: Vòng lặp Subset Construction
         step_count = 2
         while unmarked_states:
             current_subset = unmarked_states.pop(0)
 
             for symbol in self.alphabet:
-                # Công thức: Epsilon_Closure(Move(Current, Symbol))
                 move_res = self.move(current_subset, symbol)
                 target_subset = self.epsilon_closure(move_res)
 
                 if not target_subset:
-                    continue # Nếu rỗng thì bỏ qua (hoặc hiểu là rơi vào TRAP)
+                    continue 
 
                 if target_subset not in dfa_states:
                     dfa_states.append(target_subset)
@@ -193,11 +190,10 @@ class NFAToDFAConverter:
                 
                 history.append({
                     "step_name": f"Phase {step_count}: Process Symbol '{symbol}'",
-                    "description": f"From {set(current_subset)} read '{symbol}' -> Move to {set(move_res)} -> ε-closure -> New State {set(target_subset)}"
+                    "description": f"From {set(current_subset)} read '{symbol}' -> Move to {set(move_res)} -> λ-closure -> New State {set(target_subset)}"
                 })
                 step_count += 1
 
-        # Bước 3: Định dạng lại output cho dễ vẽ đồ thị
         def format_name(s_set):
             return "{" + ", ".join(sorted(list(s_set))) + "}"
 

@@ -32,7 +32,7 @@ if 'original_nfa' not in st.session_state: st.session_state.original_nfa = None
 # UTILITY & RENDERING FUNCTIONS
 # -----------------------------------------------------------------------------
 def init_table(alphabet, default_states):
-    """Khởi tạo bảng dữ liệu với các cột tương ứng theo Alphabet"""
+    """Initializes data table with columns based on Alphabet"""
     df = pd.DataFrame(index=range(len(default_states)), columns=["State"] + alphabet)
     df["State"] = default_states
     return df.fillna("")
@@ -57,7 +57,7 @@ def render_graph(states, transitions, start, finals, active_node=None):
             
     edge_dict = {}
     for (src, symbol), dst in transitions.items():
-        # Xử lý chung cho cả DFA (chuỗi) và NFA (list)
+        # Handle both DFA (string) and NFA (list) transitions
         dst_list = dst if isinstance(dst, list) else [dst]
         for d in dst_list:
             key = (src, d)
@@ -126,13 +126,30 @@ with left_col:
     st.info("💡 Edit cells directly. Click ➕ below the table to add new states.")
     
     # 1. Alphabet Input
-    default_alpha = "0, 1" if m_type == "DFA" else "a, b, e"
-    sigma_in = st.text_input("Alphabet Σ (comma separated, use 'e' for epsilon):", default_alpha)
+    default_alpha = "0, 1" if m_type == "DFA" else "a, b, λ"
+    sigma_in = st.text_input("Alphabet Σ (comma separated, use 'λ' for lambda):", default_alpha)
     alphabet = [x.strip() for x in sigma_in.split(",") if x.strip()]
     
     # 2. Init Table if empty or alphabet changed
     if st.session_state[st_key] is None or list(st.session_state[st_key].columns[1:]) != alphabet:
         st.session_state[st_key] = init_table(alphabet, ["q0", "q1", "q2", "q3", "q4"])
+        
+        # Pre-fill NFA M1 Sample Data
+        if m_type == "NFA" and st.session_state[st_key] is not None:
+            df_init = st.session_state[st_key]
+            if "a" in alphabet:
+                df_init.at[0, "a"] = "q1"
+                df_init.at[1, "a"] = "q0"
+                df_init.at[2, "a"] = "q1, q2"
+                df_init.at[3, "a"] = "q4"
+            if "b" in alphabet:
+                df_init.at[0, "b"] = "q1"
+                df_init.at[3, "b"] = "q3"
+                df_init.at[4, "b"] = "q3"
+            if "λ" in alphabet:
+                df_init.at[0, "λ"] = "q3"
+                df_init.at[1, "λ"] = "q2"
+                df_init.at[3, "λ"] = "q4"
 
     # 3. Interactive Data Grid
     edited_df = st.data_editor(
@@ -179,7 +196,7 @@ with left_col:
                     if m_type == "NFA":
                         delta[(src, sym)] = [d.strip() for d in val.split(",") if d.strip()]
                     else:
-                        delta[(src, sym)] = val.split(",")[0].strip() # Đảm bảo DFA chỉ có 1 đích đến
+                        delta[(src, sym)] = val.split(",")[0].strip() # Ensure DFA has only 1 destination
         
         start = q0_in.strip()
         finals = [i.strip() for i in f_in.split(",")]
