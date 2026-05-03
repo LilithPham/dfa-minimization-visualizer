@@ -1,14 +1,3 @@
-"""
-Automata Theory & Formal Languages - Midterm Project
-Module: Interactive DFA Visualizer Suite
-Description: Provides DFA Minimization using the Table-Filling Algorithm 
-             and a Step-by-Step String Simulator with dynamic graph rendering.
-             UI designed to match academic lecture slides strictly.
-
-Student: Pham Minh Thu
-Institution: Vietnamese-German University (VGU)
-"""
-
 import streamlit as st
 import graphviz
 import pandas as pd
@@ -54,9 +43,12 @@ def render_graph(states, transitions, start, finals, active_node=None):
     for s in states:
         shape = 'doublecircle' if s in finals else 'circle'
         if active_node and s == active_node:
-            dot.node(s, shape=shape, style='filled', fillcolor='lightgreen')
+            dot.node(s, shape=shape, style='filled', fillcolor='#7FFF00', color='red', penwidth='3')
         else:
             dot.node(s, shape=shape)
+            
+    if active_node and active_node not in states:
+        dot.node(active_node, shape='octagon', style='filled', fillcolor='#FFB6C1', color='red', penwidth='3')
             
     edge_dict = {}
     for (src, symbol), dst in transitions.items():
@@ -245,8 +237,10 @@ elif module == "DFA String Simulator":
                 
             st.session_state.sim_trace = trace_log
             st.session_state.sim_step = 0
+            
+            # FIX APPLIED HERE: Added s.strip() to clean up state names
             st.session_state.sim_dfa = {
-                "q": q_in.split(","), "d": delta, 
+                "q": [s.strip() for s in q_in.split(",")], "d": delta, 
                 "q0": q0_in.strip(), "f": [i.strip() for i in f_in.split(",")]
             }
             st.rerun()
