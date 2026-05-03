@@ -66,3 +66,7 @@ This project is an interactive web application designed to visualize and simulat
    ```bash
   streamlit run app.py
 
+### ☁️ Cloud Deployment
+This application is fully compatible with Streamlit Community Cloud. It utilizes requirements.txt for Python dependencies and packages.txt for the underlying Linux Graphviz core, ensuring seamless zero-config deployment.
+
+Developed for the CS Midterm Project - 2026
