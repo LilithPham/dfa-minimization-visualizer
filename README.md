@@ -10,18 +10,23 @@ This project is an interactive web application designed to visualize and simulat
 
 ## ✨ Core Features
 
-### 1. Minimization Engine (Table-Filling Algorithm)
-* **Reachability Analysis:** Automatically detects and removes inaccessible states using Breadth-First Search (BFS).
-* **Step-by-Step Visualization:** Breaks down the marking process into logical phases, allowing users to navigate forward and backward.
-* **Distinguishability Grid:** Displays the marking table exactly as taught in academic lectures, clearly distinguishing between marked and equivalent pairs.
-* **Equivalence Class Partitioning:** Groups indistinguishable states and outputs the final mathematical partitions.
-* **Dynamic Graph Rendering:** Generates and displays both the Original DFA and the final Minimal DFA side-by-side for easy comparison using Graphviz.
+### 1. DFA Minimizer (Table-Filling Algorithm)
+* **Reachability Analysis:** Automatically filters out unreachable states.
+* **Distinguishability Grid:** Dynamically generates the marking table exactly as taught in lectures, identifying distinguishable vs. equivalent state pairs.
+* **Equivalence Class Partitioning:** Mathematically groups indistinguishable states into final partitions.
+* **Minimal DFA Output:** Renders the optimized DFA side-by-side with its new transition table.
 
-### 2. Step-by-Step String Simulator
-* **Real-time Tracing:** Simulates the execution of a given string through the defined DFA.
-* **Visual Highlighting:** Dynamically highlights the active state node in green on the Graphviz graph as each character is processed.
-* **Acceptance Evaluation:** Determines and clearly outputs whether the final state is an accepting state or a rejecting state.
+### 2. DFA String Execution Simulator
+* **Interactive Traversal:** Simulates the execution of strings step-by-step.
+* **Visual Tracing:** Dynamically highlights the active state node in **neon green**. Transitions falling outside the alphabet or state definitions are visually caught in a **red octagon trap state**.
+* **Random Testing:** Built-in random string generator based on the defined alphabet $\Sigma$.
+* **QA Test History:** Automatically logs recent execution results (Accepted/Rejected) into a test history board.
 
+### 3. NFA to DFA Converter (Subset Construction)
+* **$\lambda$-Transition Support:** Fully handles NFA with lambda (epsilon) transitions using precise $\lambda$-closure algorithms.
+* **Non-Deterministic Inputs:** Allows inputting multiple destination states per symbol via comma-separated values in an interactive data grid.
+* **Step-by-Step Visualization:** Traces the Powerset/Subset construction method phase-by-phase.
+* **Graph Generation:** Automatically renders the mathematically equivalent DFA transition table and node graph.
 ## 🛠️ Technology Stack
 * **Language:** Python 3.9+
 * **Framework:** [Streamlit](https://streamlit.io/) (for interactive web UI)
